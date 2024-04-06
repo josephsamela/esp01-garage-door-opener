@@ -5,7 +5,7 @@
 
 const String ssid = "< SSID >";
 const String password = "< PASSWORD >";
-const String token = "< TOKEN >"
+const String token = "< TOKEN >";
 
 ESP8266WebServer server(80);
 
