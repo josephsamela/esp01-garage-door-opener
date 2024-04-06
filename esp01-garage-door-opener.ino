@@ -3,8 +3,9 @@
 #include <ESP8266WebServer.h>
 #include <ESP8266mDNS.h>
 
-const char* ssid = "< SSID >";
-const char* password = "< PASSWORD >";
+const String ssid = "< SSID >";
+const String password = "< PASSWORD >";
+const String token = "< TOKEN >"
 
 ESP8266WebServer server(80);
 
@@ -53,42 +54,43 @@ void setup() {
   digitalWrite(relay, HIGH);
 
   server.on("/", []() {
-    server.send(200, "text/plain", "This is Joe's Garage Door!\nSend a GET request to an endpoint below: \n\n`/toggle`\t\tToggle door state. Digital 'press' of the garage door button.\n`/status`\t\tGet JSON status of garage door.\n`/setState?value=1`\tSet state of garage door. Valid states are the two values, `open=0` and `closed=1`\n");
+    server.send(200, "text/plain", "This is Joe's Garage Door!\nSend a GET request to an endpoint below: \n\n`/<token>/toggle`\t\tToggle door state. Digital 'press' of the garage door button.\n`/<token>/status`\t\tGet JSON status of garage door.\n`/<token>/setState?value=1`\tSet state of garage door. Valid states are the two values, `open=0` and `closed=1`\n");
   });
   
-  server.on("/toggle", []() {
+  server.on("/"+token+"/toggle", []() {
     digitalWrite(led, LOW);
     toggleGarageDoorState();
     server.send(200, "text/plain", "Pressed garage door button. Door state will toggle.\n");
     digitalWrite(led, HIGH);
   });
 
-  server.on("/status", []() {
+  server.on("/"+token+"/status", []() {
     digitalWrite(led, LOW);
     server.send(200, "text/plain", "{\"currentState\":" + String(currentState) + ",\"requestedState\":" + String(requestedState) +"}\n");
     digitalWrite(led, HIGH);
   });
 
-  server.on("/setState", []() {
-    for (uint8_t i = 0; i < server.args(); i++) {
-      if (server.argName(i) == "value" ) {
-          requestedState = server.arg(i).toInt();
-
-          if (requestedState != currentState) {
-            if (millis() >= lockExpire) {
-              toggleGarageDoorState();
-              lockExpire = millis() + lockDuration;
-            }
-          }
-          
+  server.on("/"+token+"/setState", []() {
+    String argValue = server.arg("value");
+    requestedState = argValue.toInt();
+    if (requestedState != currentState) {
+      if (millis() >= lockExpire) {
+        toggleGarageDoorState();
+        lockExpire = millis() + lockDuration;
+      }
+    }
           server.send(200, "text/plain", "{\"currentState\":" + String(currentState) + ",\"requestedState\":" + String(requestedState) +"}\n");
+          server.send(200, "text/plain", "{\"currentState\":" + String(currentState) + ",\"requestedState\":" + String(requestedState) +"}\n");
+      }
+    }
+    server.send(200, "text/plain", "{\"currentState\":" + String(currentState) + ",\"requestedState\":" + String(requestedState) +"}\n");
       }
     }
   });
 
   server.onNotFound([]() {
     digitalWrite(led, 1);
-    String message = "Route Not Found\n\n";
+    String message = "Route Not Found\n";
     message += "URI: ";
     message += server.uri();
     message += "\nMethod: ";
