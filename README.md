@@ -34,10 +34,9 @@ The `setState` route accepts a query param called `value`. You can set state to 
 ```
 /setState?value=INT_VALUE
 ```
+### Homebridge
 
-### Homebridge Configuration
-
-I recommend following the default homebridge configuration suggested by the [homebridge-http-garage](https://github.com/phenotypic/homebridge-http-garage) plugin readme. Here's what I use:
+[homebridge-http-garage](https://github.com/phenotypic/homebridge-http-garage)
 
 ```json
 {
@@ -52,6 +51,41 @@ I recommend following the default homebridge configuration suggested by the [hom
     "timeout": 5000,
     "http_method": "GET"
 }
+```
+
+### Home Assistant
+
+```yaml
+ switch:
+   - platform: rest
+     name: garage_door
+     unique_id: garage_door
+     resource: http://192.168.1.35/setState
+     state_resource: http://192.168.1.35/status
+     is_on_template: '{{ value_json.currentState == 0 }}'
+     params:
+       value: >
+         {% if is_state('switch.garage_door', 'on') %}
+           1
+         {% else %}
+           0
+         {% endif %}
+
+ cover:
+   - platform: template
+     covers:
+        garage_door:
+         friendly_name: "Garage Door"
+         device_class: "garage"
+         value_template: "{{ is_state('switch.garage_door', 'on') }}"
+         open_cover:
+           service: switch.turn_on
+           target:
+             entity_id: switch.garage_door
+         close_cover:
+           service: switch.turn_off
+           target:
+             entity_id: switch.garage_door
 ```
 
 ## Hardware
